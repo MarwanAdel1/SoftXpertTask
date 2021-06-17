@@ -3,7 +3,7 @@ package com.example.softxperttask.model;
 import java.util.List;
 
 public class JsonResponse {
-    private List<Car> data ;
+    private List<Car> data;
     private int status;
 
     public List<Car> getCarList() {

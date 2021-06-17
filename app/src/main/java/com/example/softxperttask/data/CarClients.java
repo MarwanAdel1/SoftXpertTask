@@ -6,8 +6,8 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class CarClients  {
-    private static final String BASE_URL="https://demo1585915.mockable.io/api/v1/";
+public class CarClients {
+    private static final String BASE_URL = "https://demo1585915.mockable.io/api/v1/";
     private CarApiInterface mCarApiInterface;
     private static CarClients INSTANCE;
 
@@ -20,14 +20,14 @@ public class CarClients  {
         mCarApiInterface = retrofit.create(CarApiInterface.class);
     }
 
-    public static CarClients getInstance(){
-        if (INSTANCE == null){
+    public static CarClients getInstance() {
+        if (INSTANCE == null) {
             INSTANCE = new CarClients();
         }
         return INSTANCE;
     }
 
-    public Call<JsonResponse> getCars(int page){
+    public Call<JsonResponse> getCars(int page) {
         Call<JsonResponse> call = mCarApiInterface.getCars(page);
         return call;
     }

@@ -3,7 +3,7 @@ package com.example.softxperttask.model;
 public class Car {
     private int id;
     private String brand;
-    private String ConstructionYear ;
+    private String ConstructionYear;
     private boolean isUsed;
     private String imageUrl;
 

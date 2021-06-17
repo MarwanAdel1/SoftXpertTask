@@ -1,8 +1,6 @@
 package com.example.softxperttask;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,12 +20,13 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
     CarViewModel mCarViewModel;
 
+    SwipeRefreshLayout pullToRefresh;
     RecyclerView carsRecyclerView;
     CarAdapter carsAdapter;
-    SwipeRefreshLayout pullToRefresh;
-    List<Car> carsArrayList = new ArrayList<>();
+    List<Car> carsArrayList;
 
     int lastLoadedPage = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mCarViewModel = ViewModelProviders.of(this).get(CarViewModel.class);
+        carsArrayList = new ArrayList<>();
 
         initializeViews();
         handleViewsActions();
@@ -45,20 +45,20 @@ public class MainActivity extends AppCompatActivity {
         mCarViewModel.carMutableLiveData.observe(this, new Observer<List<Car>>() {
             @Override
             public void onChanged(List<Car> cars) {
-                carsArrayList=cars;
-                Log.e(CarViewModel.class.getSimpleName(),"Hi : "+carsArrayList.size());
-                fetchCarsData(true);
+                if (cars != null) {
+                    handleActionsForRefreshSuccessFromPagination(cars);
+                }
             }
         });
 
     }
 
-    void initializeViews() {
+    private void initializeViews() {
         carsRecyclerView = findViewById(R.id.cars_recycler);
         pullToRefresh = findViewById(R.id.pullToRefresh);
     }
 
-    void handleViewsActions() {
+    private void handleViewsActions() {
         pullToRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupCarsRecyclerView() {
-        carsAdapter = new CarAdapter(carsArrayList);
+        carsAdapter = new CarAdapter();
         carsRecyclerView.setAdapter(carsAdapter);
         carsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
@@ -87,11 +87,8 @@ public class MainActivity extends AppCompatActivity {
 
                 LinearLayoutManager linearLayoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
 
-
                 if (linearLayoutManager != null && linearLayoutManager.findLastCompletelyVisibleItemPosition() == carsArrayList.size() - 1) {
-                    //bottom of list!
-                    loadMore();
-
+                    fetchCarsData(true);
                 }
             }
         });
@@ -99,37 +96,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void fetchCarsData(boolean forPagination) {
         if (forPagination) {
-            handleActionsForRefreshSuccessFromPagination(carsArrayList);
-        } else {
-            handleActionsForRefreshSuccessFromRefresh(carsArrayList);
+            mCarViewModel.getCarsFromRetrofit(lastLoadedPage);
+        } else if (!forPagination) {
+            carsArrayList.clear();
+            lastLoadedPage = 1;
+            mCarViewModel.getCarsFromRetrofit(lastLoadedPage);
         }
     }
 
     private void handleActionsForRefreshSuccessFromPagination(List<Car> carsList) {
-        //removeLoadingItemFromAdapter();
         carsArrayList.addAll(carsList);
         carsAdapter.changeData(carsArrayList);
-        lastLoadedPage += 1;
-        mCarViewModel.getCarsFromRetrofit(lastLoadedPage);
-    }
-
-    private void handleActionsForRefreshSuccessFromRefresh(List<Car> carsList) {
-        carsArrayList = carsList;
-        lastLoadedPage = 1;
-        carsAdapter.changeData(carsList);
-        mCarViewModel.getCarsFromRetrofit(lastLoadedPage);
-    }
-
-    private void loadMore() {
-        carsArrayList.add(null);
-        carsAdapter.notifyItemInserted(carsArrayList.size() - 1);
-
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                fetchCarsData(true);
-            }
-        }, 2000);
+        lastLoadedPage++;
     }
 }
